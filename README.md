@@ -16,6 +16,9 @@ Fivesec-Nginx provides a custom-built and optimized Nginx setup with a focus on 
 - Starts OpenSearch with OpenSearch Dashboards.
 - Ships Nginx logs to OpenSearch via Logstash.
 
+## Example
+![image](https://github.com/fivesecde/fivesec-nginx/blob/main/example.png)
+
 ## Getting Started
 
 ### Prerequisites

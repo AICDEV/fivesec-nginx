@@ -62,3 +62,6 @@ Your OpenSearch instance should be accessible at:
 
 Since the certificate is self-signed, you may need to manually trust it. Once logged in, create an index pattern for `webserver-logs`—this is where your Nginx logs will appear.
 
+## Addional Help
+If you need help/have question, feel free to get in touch with us at every time (https://fivesec.de) :-)
+

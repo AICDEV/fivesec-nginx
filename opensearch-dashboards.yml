@@ -1,0 +1,13 @@
+server.name: client.dns.a-record
+server.host: "0.0.0.0"
+
+server.ssl.enabled: true
+server.ssl.certificate: "/usr/share/opensearch-dashboards/config/certificates/client.pem"
+server.ssl.key: "/usr/share/opensearch-dashboards/config/certificates/client-key.pem"
+
+
+opensearch.hosts: '["https://opensearch-node1:9200","https://opensearch-node2:9200"]'
+opensearch.ssl.certificateAuthorities: ["/usr/share/opensearch-dashboards/config/certificates/root-ca.pem"]
+opensearch.ssl.verificationMode: full
+opensearch_security.cookie.secure: true
+opensearch.logQueries: true

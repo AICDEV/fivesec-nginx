@@ -46,4 +46,3 @@ rm client-key-temp.pem client.csr client.ext
 
 cd ..
 chmod -R 750 ./certs
-chown -R $USER:1000 ./certs

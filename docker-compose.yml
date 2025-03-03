@@ -22,17 +22,16 @@ services:
     depends_on:
       - fivesec-nginx
   opensearch-node1:
-    image: opensearchproject/opensearch:latest
+    image: opensearchproject/opensearch:2.19.1
     container_name: opensearch-node1
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
       - discovery.seed_hosts=opensearch-node1,opensearch-node2
-      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2 
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
       - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
-      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - DISABLE_INSTALL_DEMO_CONFIG=false
     ulimits:
       memlock:
         soft: -1
@@ -41,8 +40,8 @@ services:
         soft: 65536 
         hard: 65536
     volumes:
-      - ./opensearch_node_1.yml:/usr/share/opensearch/config/opensearch.yml
-      - "opensearch-data1:/usr/share/opensearch/data"
+      - ./opensearch_node_1.yml:/usr/share/opensearch/config/opensearch.yml:ro
+      - ./opensearch-data-1:/usr/share/opensearch/data
       - ./certs:/usr/share/opensearch/config/certificates:ro
     ports:
       - 9200:9200
@@ -50,7 +49,7 @@ services:
     networks:
       - opensearch-net
   opensearch-node2:
-    image: opensearchproject/opensearch:latest
+    image: opensearchproject/opensearch:2.19.1
     container_name: opensearch-node2
     environment:
       - cluster.name=opensearch-cluster
@@ -58,9 +57,8 @@ services:
       - discovery.seed_hosts=opensearch-node1,opensearch-node2
       - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
       - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
-      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - DISABLE_INSTALL_DEMO_CONFIG=false
     ulimits:
       memlock:
         soft: -1
@@ -70,18 +68,19 @@ services:
         hard: 65536
     volumes:
       - ./opensearch_node_2.yml:/usr/share/opensearch/config/opensearch.yml
-      - "opensearch-data2:/usr/share/opensearch/data"
+      - ./opensearch-data-2:/usr/share/opensearch/data
       - ./certs:/usr/share/opensearch/config/certificates:ro
     networks:
       - opensearch-net
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:latest
+    image: opensearchproject/opensearch-dashboards:2.19.1
     container_name: opensearch-dashboards
     ports:
       - 5601:5601
     environment:
       - OPENSEARCH_USERNAME=admin
-      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - OPENSEARCH_PASSWORD=admin
+      - DISABLE_INSTALL_DEMO_CONFIG=false
     expose:
       - "5601"
     volumes:

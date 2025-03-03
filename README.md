@@ -41,14 +41,21 @@ chmod -R 750 ./certs
 
 ### Configuration
 
-- Update or replace the `.env` file, which contains the `OPENSEARCH_INITIAL_ADMIN_PASSWORD` value.
 - Once configured, start the stack by running:
 
 ```bash
  docker compose up --build
 ```
 
+After first time boot you need satisfy the security settings of OpenSearch by running:
+
+```bash
+docker compose exec opensearch-node1 bash -c "chmod +x plugins/opensearch-security/tools/securityadmin.sh && bash plugins/opensearch-security/tools/securityadmin.sh -cd config/opensearch-security -icl -nhnv -cacert config/certificates/root-ca.pem -cert config/certificates/admin.pem -key config/certificates/admin.key -h localhost"
+```
+
 ## Accessing Services
+
+Opensearch default user is `admin` and password is `admin`. Make sure to change it for further use.
 
 ### Nginx
 Your Nginx server should now be accessible at:

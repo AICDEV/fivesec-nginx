@@ -1,21 +1,36 @@
-cluster.name: os-cluster
-network.host: 0.0.0.0
+cluster.name: opensearch-cluster
+node.name: opensearch-node1
 
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+discovery.seed_hosts:
+  - "opensearch-node1"
+  - "opensearch-node2"
+
+cluster.initial_cluster_manager_nodes:
+  - "opensearch-node1"
+  - "opensearch-node2"
 
 cluster.routing.allocation.disk.threshold_enabled: true
-cluster.routing.allocation.disk.watermark.low: 93%
-cluster.routing.allocation.disk.watermark.high: 95%
+cluster.routing.allocation.disk.watermark.low: 90%
+cluster.routing.allocation.disk.watermark.high: 92%
+cluster.routing.allocation.disk.watermark.flood_stage: 95%
 
-plugins.security.ssl.transport.pemcert_filepath: certificates/node1.pem
-plugins.security.ssl.transport.pemkey_filepath: certificates/node1-key.pem
-plugins.security.ssl.http.pemcert_filepath: certificates/node1.pem
-plugins.security.ssl.http.pemkey_filepath: certificates/node1-key.pem
+plugins.security.ssl.transport.pemcert_filepath: certificates/opensearch-node1.pem
+plugins.security.ssl.transport.pemkey_filepath: certificates/opensearch-node1.key
 plugins.security.ssl.transport.pemtrustedcas_filepath: certificates/root-ca.pem
 plugins.security.ssl.transport.enforce_hostname_verification: false
+
 plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: certificates/opensearch-node1.pem
+plugins.security.ssl.http.pemkey_filepath: certificates/opensearch-node1.key
 plugins.security.ssl.http.pemtrustedcas_filepath: certificates/root-ca.pem
+
 plugins.security.authcz.admin_dn:
-  - 'CN=A,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
+  - "CN=ADMIN,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA"
+
 plugins.security.nodes_dn:
-  - 'CN=opensearch-node1,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
-  - 'CN=opensearch-node2,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
+  - "CN=opensearch-node1,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA"
+  - "CN=opensearch-node2,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA"

@@ -1,48 +1,40 @@
 #!/bin/bash
 
-# Create certs directory
-mkdir -p certs
-cd certs || exit
+set -euo pipefail
 
-# Root CA
-openssl genrsa -out root-ca-key.pem 2048
-openssl req -new -x509 -sha256 -key root-ca-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=root.dns.a-record" -out root-ca.pem -days 730
+CERTS_DIR="certs"
+mkdir -p "$CERTS_DIR"
+cd "$CERTS_DIR" || exit 1
 
-# Admin cert
-openssl genrsa -out admin-key-temp.pem 2048
-openssl pkcs8 -inform PEM -outform PEM -in admin-key-temp.pem -topk8 -nocrypt -v1 PBE-SHA1-3DES -out admin-key.pem
-openssl req -new -key admin-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=A" -out admin.csr
-openssl x509 -req -in admin.csr -CA root-ca.pem -CAkey root-ca-key.pem -CAcreateserial -sha256 -out admin.pem -days 730
+echo "[+] Generating Root CA..."
+openssl genrsa -out root-ca.key 4096
+openssl req -new -x509 -sha256 -key root-ca.key -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=CA" -out root-ca.pem -days 730
 
-# Node cert 1
-openssl genrsa -out node1-key-temp.pem 2048
-openssl pkcs8 -inform PEM -outform PEM -in node1-key-temp.pem -topk8 -nocrypt -v1 PBE-SHA1-3DES -out node1-key.pem
-openssl req -new -key node1-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=opensearch-node1" -out node1.csr
-echo 'subjectAltName=DNS:opensearch-node1' > node1.ext
-echo 'extendedKeyUsage=serverAuth,clientAuth' >> node1.ext
-openssl x509 -req -in node1.csr -CA root-ca.pem -CAkey root-ca-key.pem -CAcreateserial -sha256 -out node1.pem -days 730 -extfile node1.ext
+echo "[+] Generating Admin certificates."
+openssl genrsa -out admin-temp.key 4096
+openssl pkcs8 -inform PEM -outform PEM -in admin-temp.key -topk8 -nocrypt -v1 PBE-SHA1-3DES -out admin.key
+openssl req -new -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=ADMIN" -key admin.key -out admin.csr
+openssl x509 -req -in admin.csr -CA root-ca.pem -CAkey root-ca.key -CAcreateserial -sha256 -out admin.pem
 
-# Node cert 2
-openssl genrsa -out node2-key-temp.pem 2048
-openssl pkcs8 -inform PEM -outform PEM -in node2-key-temp.pem -topk8 -nocrypt -v1 PBE-SHA1-3DES -out node2-key.pem
-openssl req -new -key node2-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=opensearch-node2" -out node2.csr
-echo 'subjectAltName=DNS:opensearch-node2' > node2.ext
-echo 'extendedKeyUsage=serverAuth,clientAuth' >> node2.ext
-openssl x509 -req -in node2.csr -CA root-ca.pem -CAkey root-ca-key.pem -CAcreateserial -sha256 -out node2.pem -days 730 -extfile node2.ext
 
-# Client cert
-openssl genrsa -out client-key-temp.pem 2048
-openssl pkcs8 -inform PEM -outform PEM -in client-key-temp.pem -topk8 -nocrypt -v1 PBE-SHA1-3DES -out client-key.pem
-openssl req -new -key client-key.pem -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=client.dns.a-record" -out client.csr
-echo 'subjectAltName=DNS:client.dns.a-record' > client.ext
-echo 'extendedKeyUsage=serverAuth,clientAuth' >> client.ext
-openssl x509 -req -in client.csr -CA root-ca.pem -CAkey root-ca-key.pem -CAcreateserial -sha256 -out client.pem -days 730 -extfile client.ext
+echo "[+] Generating Dashboard certificates."
+openssl genrsa -out dashboard-temp.key 4096
+openssl pkcs8 -inform PEM -outform PEM -in dashboard-temp.key -topk8 -nocrypt -v1 PBE-SHA1-3DES -out dashboard.key
+openssl req -new -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=DASHBOARD" -key dashboard.key -out dashboard.csr
+openssl x509 -req -in dashboard.csr -CA root-ca.pem -CAkey root-ca.key -CAcreateserial -sha256 -out dashboard.pem
+rm dashboard-temp.key dashboard.csr
 
-# Cleanup
-rm admin-key-temp.pem admin.csr
-rm node1-key-temp.pem node1.csr node1.ext
-rm node2-key-temp.pem node2.csr node2.ext
-rm client-key-temp.pem client.csr client.ext
+
+for NODE_NAME in "opensearch-node1" "opensearch-node2"
+do
+    openssl genrsa -out "$NODE_NAME-temp.key" 4096
+    openssl pkcs8 -inform PEM -outform PEM -in "$NODE_NAME-temp.key" -topk8 -nocrypt -v1 PBE-SHA1-3DES -out "$NODE_NAME.key"
+    openssl req -new -subj "/C=CA/ST=ONTARIO/L=TORONTO/O=ORG/OU=UNIT/CN=$NODE_NAME" -key "$NODE_NAME.key" -out "$NODE_NAME.csr"
+    openssl x509 -req -extfile <(printf "subjectAltName=DNS:localhost,IP:127.0.0.1,DNS:$NODE_NAME") -in "$NODE_NAME.csr" -CA root-ca.pem -CAkey root-ca.key -CAcreateserial -sha256 -out "$NODE_NAME.pem"
+    rm "$NODE_NAME-temp.key" "$NODE_NAME.csr"
+done
 
 cd ..
 chmod -R 750 ./certs
+
+echo "[+] Certificate generation complete!"

@@ -1,5 +1,8 @@
 function headers_to_json(r) {
-    return JSON.stringify(r.headersIn)
+    var headersArray = Object.keys(r.headersIn).map(function(name) {
+        return { name: name, value: r.headersIn[name] };
+    });
+    return JSON.stringify(headersArray);
 }
 
-export default {headers_to_json};
+export default { headers_to_json };

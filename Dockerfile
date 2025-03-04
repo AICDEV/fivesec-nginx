@@ -2,7 +2,7 @@ FROM debian:stable-slim AS build
 
 # Install dependencies
 RUN apt update && apt upgrade -y && \
-    apt install -y build-essential wget git cmake libssl-dev libpcre3-dev zlib1g-dev libgd-dev libgeoip-dev && \
+    apt install -y build-essential wget git cmake libssl-dev libpcre3-dev zlib1g-dev libgd-dev libgeoip-dev libxslt-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Define Nginx version
@@ -22,6 +22,16 @@ mkdir out && cd out && \
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-Ofast -march=armv8-a -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_CXX_FLAGS="-Ofast -march=armv8-a -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_INSTALL_PREFIX=./installed .. && \
 cmake --build . --config Release --target brotlienc && \
 cd ../../../..
+
+# Download NJS module
+WORKDIR /usr/src
+RUN git clone https://github.com/nginx/njs
+
+# Make QuickJS
+WORKDIR /usr/src
+RUN git clone https://github.com/bellard/quickjs && \
+    cd quickjs && CFLAGS='-fPIC' make libquickjs.a  && \
+    cd ..
 
 # Download and extract Nginx
 WORKDIR /usr/src/nginx
@@ -65,12 +75,14 @@ RUN     export CFLAGS="-march=armv8-a -march=native -mtune=native -Ofast -flto -
     --with-http_sub_module \
     --with-http_gunzip_module \
     --with-http_gzip_static_module \
-    --with-stream=dynamic \
     --with-http_auth_request_module \
     --with-http_secure_link_module \
     --with-http_slice_module \
     --with-http_stub_status_module \
-    --add-module=/usr/src/ngx_brotli && \
+    --add-module=/usr/src/ngx_brotli \
+     --add-module=/usr/src/njs/nginx \
+     --with-cc-opt='-I /usr/src/quickjs' \
+     --with-ld-opt='-L /usr/src/quickjs' &&  \
     make -j$(nproc) && \
     make install
 
@@ -78,7 +90,7 @@ RUN     export CFLAGS="-march=armv8-a -march=native -mtune=native -Ofast -flto -
 FROM debian:stable-slim
 
 # Install required runtime dependencies
-RUN apt update && apt install -y libssl3 libpcre3 zlib1g libgd3 libgeoip1 && \
+RUN apt update && apt install -y libssl3 libpcre3 zlib1g libgd3 libgeoip1 libxml2 && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy built nginx from build stage
@@ -88,6 +100,7 @@ COPY --from=build /var/www/html /var/www/html
 COPY --from=build /var/log/nginx /var/log/nginx
 COPY --from=build /etc/nginx/modules /etc/nginx/modules
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY headers.js /etc/nginx/headers.js
 COPY sites-available /etc/nginx/sites-available
 
 # Create nginx user

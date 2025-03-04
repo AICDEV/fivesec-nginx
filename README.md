@@ -13,6 +13,7 @@ Fivesec-Nginx provides a custom-built and optimized Nginx setup with a focus on 
 - Builds Nginx from source with Brotli compression support ([ngx_brotli](https://github.com/google/ngx_brotli)).
 - Configures logging settings and security options in `nginx.conf` (review before use).
 - Sets up JSON logging for Nginx.
+- Setup full header logs of any request with NJS ([https://github.com/nginx/njs]) support.
 - Starts OpenSearch with OpenSearch Dashboards.
 - Ships Nginx logs to OpenSearch via Logstash.
 

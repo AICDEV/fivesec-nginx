@@ -1,8 +1,10 @@
-# Fivesec-Nginx
+# Fivesec-Opensearch-SIEM-starter
+
+Made with ❤️ by [@fivesec](https://fivesec.de)
 
 ## About
 
-Fivesec-Nginx provides a custom-built and optimized Nginx setup with a focus on security and performance. This repository includes:
+Fivesec-Opensearch-SIEM-starter provides an Opensearch SIEM system with logstash and a custom-built and optimized Nginx setup with a focus on security and performance. This repository includes:
 - A Dockerfile to compile Nginx from source with Brotli support.
 - Preconfigured security and logging settings.
 - Logstash integration to efficiently ship Nginx logs to OpenSearch for real-time monitoring and analytics.
@@ -28,19 +30,13 @@ Ensure you have Docker and the Docker Compose plugin installed on your system.
 
 ### Initial Setup
 
-Since OpenSearch is configured to use TLS, you must generate the necessary certificates before starting the stack. Run:
+Since OpenSearch is configured to use TLS, you’ll need to generate certificates before launching the stack. This script also sets the required Docker volumes and permissions.
 
 ```bash
 ./make_certs.sh
 ```
 
-Then, set the correct file permissions:
-
-```bash
-chmod -R 750 ./certs
-```
-
-### Configuration
+###  Launch the Stack
 
 - Once configured, start the stack by running:
 
@@ -48,15 +44,21 @@ chmod -R 750 ./certs
  docker compose up --build
 ```
 
-After first time boot you need satisfy the security settings of OpenSearch by running:
+Wait 30–60 seconds on first boot. Once you see the run securityadmin log message, initialize OpenSearch Security Plugin with:
 
 ```bash
-docker compose exec opensearch-node1 bash -c "chmod +x plugins/opensearch-security/tools/securityadmin.sh && bash plugins/opensearch-security/tools/securityadmin.sh -cd config/opensearch-security -icl -nhnv -cacert config/certificates/root-ca.pem -cert config/certificates/admin.pem -key config/certificates/admin.key -h localhost"
+docker compose exec opensearch-node-1 bash -c "chmod +x plugins/opensearch-security/tools/securityadmin.sh && bash plugins/opensearch-security/tools/securityadmin.sh -cd config/opensearch-security -icl -nhnv -cacert config/certificates/root-ca.pem -cert config/certificates/admin.pem -key config/certificates/admin.key -h localhost"
 ```
+
+###  Log Collection
+
+After the first request hits Nginx, Logstash will create an index named: logstash-webserver-logs.
+Keep in mind to create a dashboard index  pattern (https://localhost:5601/app/management/opensearch-dashboards/indexPatterns)
+to have the logs searchable.
 
 ## Accessing Services
 
-Opensearch default user is `admin` and password is `admin`. Make sure to change it for further use.
+Opensearch default user is `admin` and password is `admin`.  Logstash default user is `logstash` and password is `logstash`. Make sure to change it for further use.
 
 ### Nginx
 Your Nginx server should now be accessible at:
@@ -68,7 +70,7 @@ Your OpenSearch instance should be accessible at:
 
 - **https://localhost:5601**
 
-Since the certificate is self-signed, you may need to manually trust it. Once logged in, create an index pattern for `webserver-logs`—this is where your Nginx logs will appear.
+Since the certificate is self-signed, you may need to manually trust it. Once logged in, create an index pattern for `logstash-webserver-logs`—this is where your Nginx logs will appear.
 
 ## Addional Help
 If you need help/have questions, feel free to get in touch with us at every time by sending us an email

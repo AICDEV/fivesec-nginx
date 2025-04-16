@@ -1,7 +1,7 @@
 services:
   fivesec-nginx:
     build:
-      context: .
+      context: fivesec-nginx
       dockerfile: Dockerfile
     image: fivesec-nginx:latest
     ports:
@@ -16,22 +16,22 @@ services:
     container_name: logstash
     volumes:
       - ./logs:/var/log/nginx
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - opensearch-net
     depends_on:
       - fivesec-nginx
-  opensearch-node1:
+  opensearch-node-1:
     image: opensearchproject/opensearch:2.19.1
-    container_name: opensearch-node1
+    container_name: opensearch-node-1
     environment:
-      - cluster.name=opensearch-cluster
-      - node.name=opensearch-node1
-      - discovery.seed_hosts=opensearch-node1,opensearch-node2
-      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
+      - node.name=opensearch-node-1
+      - discovery.seed_hosts=opensearch-node-1,opensearch-node-2
+      - cluster.initial_cluster_manager_nodes=opensearch-node-1,opensearch-node-2
       - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
-      - DISABLE_INSTALL_DEMO_CONFIG=false
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=false"
     ulimits:
       memlock:
         soft: -1
@@ -40,25 +40,35 @@ services:
         soft: 65536 
         hard: 65536
     volumes:
-      - ./opensearch_node_1.yml:/usr/share/opensearch/config/opensearch.yml:ro
+      - ./os-config/opensearch-node-1.yml:/usr/share/opensearch/config/opensearch.yml:ro
       - ./opensearch-data-1:/usr/share/opensearch/data
       - ./certs:/usr/share/opensearch/config/certificates:ro
+      - ./os-config/security/config.yml:/usr/share/opensearch/config/config.yml
+      - ./os-config/security/roles.yml:/usr/share/opensearch/config/roles.yml
+      - ./os-config/security/roles_mapping.yml:/usr/share/opensearch/config/roles_mapping.yml
+      - ./os-config/security/internal_users.yml:/usr/share/opensearch/config/internal_users.yml
+      - ./os-config/security/action_groups.yml:/usr/share/opensearch/config/action_groups.yml
+      - ./os-config/security/tenants.yml:/usr/share/opensearch/config/tenants.yml
+      - ./os-config/security/nodes_dn.yml:/usr/share/opensearch/config/nodes_dn.yml
+      - ./os-config/security/whitelist.yml:/usr/share/opensearch/config/whitelist.yml
     ports:
       - 9200:9200
       - 9600:9600
     networks:
       - opensearch-net
-  opensearch-node2:
+    user: "1000:1000"
+
+  opensearch-node-2:
     image: opensearchproject/opensearch:2.19.1
-    container_name: opensearch-node2
+    container_name: opensearch-node-2
     environment:
-      - cluster.name=opensearch-cluster
-      - node.name=opensearch-node2
-      - discovery.seed_hosts=opensearch-node1,opensearch-node2
-      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
+      - node.name=opensearch-node-2
+      - discovery.seed_hosts=opensearch-node-1,opensearch-node-2
+      - cluster.initial_cluster_manager_nodes=opensearch-node-1,opensearch-node-2
       - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
-      - DISABLE_INSTALL_DEMO_CONFIG=false
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=false"
     ulimits:
       memlock:
         soft: -1
@@ -67,11 +77,21 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - ./opensearch_node_2.yml:/usr/share/opensearch/config/opensearch.yml
+      - ./os-config/opensearch-node-2.yml:/usr/share/opensearch/config/opensearch.yml
       - ./opensearch-data-2:/usr/share/opensearch/data
       - ./certs:/usr/share/opensearch/config/certificates:ro
+      - ./os-config/security/config.yml:/usr/share/opensearch/config/config.yml
+      - ./os-config/security/roles.yml:/usr/share/opensearch/config/roles.yml
+      - ./os-config/security/roles_mapping.yml:/usr/share/opensearch/config/roles_mapping.yml
+      - ./os-config/security/internal_users.yml:/usr/share/opensearch/config/internal_users.yml
+      - ./os-config/security/action_groups.yml:/usr/share/opensearch/config/action_groups.yml
+      - ./os-config/security/tenants.yml:/usr/share/opensearch/config/tenants.yml
+      - ./os-config/security/nodes_dn.yml:/usr/share/opensearch/config/nodes_dn.yml
+      - ./os-config/security/whitelist.yml:/usr/share/opensearch/config/whitelist.yml
     networks:
       - opensearch-net
+    user: "1000:1000"
+
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.19.1
     container_name: opensearch-dashboards
@@ -85,13 +105,10 @@ services:
       - "5601"
     volumes:
       - "./certs:/usr/share/opensearch-dashboards/config/certificates:ro"
-      - "./opensearch-dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
+      - "./os-config/opensearch-dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
     networks:
       - opensearch-net
-
-volumes:
-  opensearch-data1:
-  opensearch-data2:
+    user: "1000:1000"
 
 networks:
   opensearch-net:

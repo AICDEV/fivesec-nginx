@@ -6,7 +6,7 @@ server.ssl.enabled: true
 server.ssl.certificate: "/usr/share/opensearch-dashboards/config/certificates/dashboard.pem"
 server.ssl.key: "/usr/share/opensearch-dashboards/config/certificates/dashboard.key"
 
-opensearch.hosts: ["https://opensearch-node1:9200", "https://opensearch-node2:9200"]
+opensearch.hosts: ["https://opensearch-node-1:9200", "https://opensearch-node-2:9200"]
 opensearch.ssl.certificateAuthorities: ["/usr/share/opensearch-dashboards/config/certificates/root-ca.pem"]
 opensearch.requestHeadersAllowlist: [ authorization,securitytenant ]
 opensearch.ssl.verificationMode: full

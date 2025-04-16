@@ -1,0 +1,11 @@
+---
+_meta:
+  type: "tenants"
+  config_version: 2
+
+# Define your tenants here
+
+## Demo tenants
+fivesec_tenant:
+  reserved: false
+  description: "Demo tenant for fivesec SIEM"

@@ -36,6 +36,10 @@ Since OpenSearch is configured to use TLS, you’ll need to generate certificate
 ./make_certs.sh
 ```
 
+### Opensearch Docker Requirements
+
+[Configure important host settings](https://docs.opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/)
+
 ###  Launch the Stack
 
 - Once configured, start the stack by running:
